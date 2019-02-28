@@ -14,8 +14,8 @@ def _setup():
 		userInput = input('Please enter bot token: \n')
 	data['token'] = userInput
 	data['guildID'] = None
-	inboxID = data['inboxID']
-	modRoleID = data['modRoleID']
+	data['inboxID'] = None
+	data['modRoleID'] = None
 	_save_data()
 	return data
 
