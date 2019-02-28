@@ -64,6 +64,7 @@ async def on_command_error(ctx, err):
 	else:
 		print(err)
 
+@bot.event
 async def on_raw_reaction_add(payload):
 	user = bot.get_user_info(payload.user_id)
 	if payload.channel_id == inboxID:
@@ -71,9 +72,9 @@ async def on_raw_reaction_add(payload):
 			if payload.message_id == item.botMsgID:
 				msg = inboxChnl.get_message(payload.message_id)
 				if payload.emoji.name == '\U0001F50D':
-					assign_mail(msg, item.mailID, user)
+					await assign_mail(msg, item.mailID, user)
 				elif payload.emoji.name == '\u2705':
-					close_mail(msg, item.mailID, user)
+					await close_mail(msg, item.mailID, user)
 				else:
 					for reaction in msg.reactions:
 						if payload.emoji.name == '\U0001F50D' or payload.emoji.name == '\u2705':
@@ -86,7 +87,7 @@ async def on_raw_reaction_add(payload):
 	else:
 		pass
 
-
+@bot.event
 async def on_raw_reaction_remove(payload):
 	pass
 
@@ -94,7 +95,7 @@ async def process_mail(msg):
 	recievedAt = datetime.utcnow()
 	mail = {}
 	mail['id'] = msg.id
-	mail['sender'] = msg.author.id
+	mail['senderID'] = msg.author.id
 	mail['mailContent'] = msg.content
 	mail['status'] = 0
 	mail['staff_member'] = None
@@ -127,7 +128,8 @@ async def process_mail(msg):
 
 async def assign_mail(msg, mailID, user):
 	mail = get_mail(mailID)
-	sender = await bot.get_user_info(mail['sender'])
+	senderID = mail['senderID']
+	sender = await bot.get_user_info(senderID)
 	em = discord.Embed(title="**__ModMail Recieved__**", colour=0xff9d00)
 	em.add_field(name="**Sender**", value=sender.mention)
 	em.add_field(name="**Message**", value=mail['mailContent'])
@@ -140,9 +142,25 @@ async def assign_mail(msg, mailID, user):
 	mail['staff_member'] = user.id
 	save_mail(mail)
 	msg.edit(embed=em)
+	msg.clear_reactions()
+	msg.add_reaction('\N{WHITE HEAVY CHECK MARK}')
 
 async def close_mail(msg, mailID, user):
 	mail = get_mail(mailID)
+	sender = await bot.get_user_info(mail['senderID'])
+	em = discord.Embed(title="**__ModMail Recieved__**", colour=0x2ecc71)
+	em.add_field(name="**Sender**", value=sender.mention)
+	em.add_field(name="**Message**", value=mail['mailContent'])
+	em.add_field(name="**Status**", value="Resolved")
+	em.add_field(name="**Staff Member**", value=user.mention)
+	recievedAt = mail['recievedAt']
+	em.timestamp = datetime(recievedAt['year'], recievedAt['month'], recievedAt['day'], recievedAt['hour'], recievedAt['minute'], recievedAt['second'])
+	em.set_footer(text='ID: ' + str(msg.id))
+	mail['status'] = 2
+	mail['staff_member'] = user.id
+	save_mail(mail)
+	msg.edit(embed=em)
+	msg.clear_reactions()
 
 async def get_mail(mailID):
 	try:
@@ -170,7 +188,7 @@ def load_active():
 			for item in data:
 				mailItem = data[item]
 				mail = Object()
-				mail.ticketID = mailItem['id']
+				mail.mailID = mailItem['id']
 				mail.botMsgID = mailItem['botMsgID']
 				activeMails.append(mail)
 	except FileNotFoundError:
