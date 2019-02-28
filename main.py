@@ -20,7 +20,7 @@ handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w'
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
 
-bot = discord.Bot(command_prefix='>', description="ModMail Bot. DM to contact Staff")
+bot = commands.Bot(command_prefix='>', description="ModMail Bot. DM to contact Staff")
 
 @bot.event
 async def on_ready():
@@ -44,7 +44,7 @@ async def on_message(msg):
 		else:
 			await process_report(msg)
 	else:
-		bot.process_commands(msg)
+		await bot.process_commands(msg)
 
 async def on_command_error(ctx, err):
 	if isinstance(err, commands.CheckFailure):
@@ -62,6 +62,13 @@ async def on_raw_reaction_remove(payload):
 
 async def process_report(msg):
 	pass
+
+async def _delete_msg(msg):
+	await msg.delete()
+
+async def _wait_delete(msg, time):
+	await asyncio.sleep(time)
+	await _delete_msg(msg)
 
 def load_active():
 	try:
@@ -87,6 +94,7 @@ def save_active():
 @bot.command()
 async def setup(ctx, roleID):
 	"""Sets up the bot, requires ID of Moderator role. Use command in channel you want reports to be sent to"""
+	await _delete_msg(ctx.message)
 	roleList = ctx.message.role_mentions
 	if len(roleList) > 1:
 		await ctx.channel.send('Please only mention 1 role!')

@@ -9,14 +9,14 @@ modRoleID = None
 def _setup():
 	data = {}
 	print('Config file not found! Creating ...')
-    while userInput == "":
-    	userInput = input('Please enter bot token: \n')
-    data['token'] = userInput
-    data['guildID'] = None
+	while userInput == "":
+		userInput = input('Please enter bot token: \n')
+	data['token'] = userInput
+	data['guildID'] = None
 	inboxID = data['inboxID']
 	modRoleID = data['modRoleID']
-    _save_data()
-    return data
+	_save_data()
+	return data
 
 def _save_data():
 	data = {
