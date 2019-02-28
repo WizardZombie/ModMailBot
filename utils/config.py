@@ -3,8 +3,10 @@ import json
 
 token = None
 guildID = None
+inboxID = None
+modRoleID = None
 
-def setup():
+def _setup():
 	data = {}
 	print('Config file not found! Creating ...')
     while userInput == "":
@@ -13,22 +15,28 @@ def setup():
     data['guildID'] = None
 	inboxID = data['inboxID']
 	modRoleID = data['modRoleID']
-    save_data(data)
+    _save_data()
     return data
 
-def save_data(data):
+def _save_data():
+	data = {
+		"token":token,
+		"guildID":guildID,
+		"inboxID":inboxID,
+		"modRoleID":modRoleID
+	}
 	with io.open('utils/config.txt', 'w', encoding='utf-8') as f:
 		f.write(json.dumps(data, sort_keys=True, indent=4, ensure_ascii=False))
 
-def load_data():
+def _load_data():
 	try:
 		with open('utils/config.txt') as data_file:
 			data = json.load(data_file)
 	except FileNotFoundError:
-		data = setup()
+		data = _setup()
 	return data
 
-data = load_data()
+data = _load_data()
 token = data['token']
 guildID = data['guildID']
 inboxID = data['inboxID']
@@ -45,4 +53,11 @@ def getInboxID():
 
 def getModRoleID():
 	return modRoleID
+
+def setConfig(serverID, channelID, roleID):
+	guildID = serverID
+	inboxID = channelID
+	modRoleID = roleID
+	_save_data()
+
 

@@ -87,8 +87,20 @@ def save_active():
 @bot.command()
 async def setup(ctx, roleID):
 	"""Sets up the bot, requires ID of Moderator role. Use command in channel you want reports to be sent to"""
-	global guildID, inboxID, modRoleID
-	#setup goes here
-	await bot.change_presence(activity=discord.Game(name='DM to contact staff'), status=discord.Status.online)
+	roleList = ctx.message.role_mentions
+	if len(roleList) > 1:
+		await ctx.channel.send('Please only mention 1 role!')
+		return
+	else:
+		global guildID, inboxID, modRoleID
+		guildID = ctx.guild.id
+		inboxID = ctx.channel.id
+		modRole = None
+		for role in roleList:
+			modRole = role
+			modRoleID = role.id
+		config.setConfig(guildID, inboxID, modRoleID)
+		await bot.change_presence(activity=discord.Game(name='DM to contact staff'), status=discord.Status.online)
+		await ctx.channel.send('This channel now set as inbox. ' + modRole.name + " set as moderator role.")
 
 bot.run(token)
