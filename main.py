@@ -46,9 +46,14 @@ async def on_message(msg):
 	else:
 		await bot.process_commands(msg)
 
+@bot.event
 async def on_command_error(ctx, err):
 	if isinstance(err, commands.CheckFailure):
 		pass
+	elif isinstance(err, commands.MissingRequiredArgument):
+		await _delete_msg(ctx.message)
+		param = err.param
+		await _wait_delete(await ctx.channel.send(f'Missing {param}. Please check parameters and try again.'), 10)
 	elif isinstance(err, commands.CommandNotFound):
 		pass
 	else:
@@ -92,7 +97,7 @@ def save_active():
 		f.write(json.dumps(mails, sort_keys=True, indent=4, ensure_ascii=False))
 
 @bot.command()
-async def setup(ctx, roleID):
+async def setup(ctx, roleTag):
 	"""Sets up the bot, requires ID of Moderator role. Use command in channel you want reports to be sent to"""
 	await _delete_msg(ctx.message)
 	roleList = ctx.message.role_mentions
