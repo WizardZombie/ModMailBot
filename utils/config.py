@@ -6,7 +6,8 @@ guildID = None
 inboxID = None
 modRoleID = None
 
-def _setup():
+def _setup():	
+	global token, guildID, inboxID, modRoleID
 	data = {}
 	print('Config file not found! Creating ...')
 	while userInput == "":
@@ -55,6 +56,7 @@ def getModRoleID():
 	return modRoleID
 
 def setConfig(serverID, channelID, roleID):
+	global guildID, inboxID, modRoleID
 	guildID = serverID
 	inboxID = channelID
 	modRoleID = roleID
