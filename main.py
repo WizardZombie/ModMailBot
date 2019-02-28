@@ -22,6 +22,9 @@ logger.addHandler(handler)
 
 bot = commands.Bot(command_prefix='>', description="ModMail Bot. DM to contact Staff")
 
+guildObj = bot.get_guild(guildID)
+inboxChnl = guildObj.get_channel(inboxID)
+
 @bot.event
 async def on_ready():
 	print('Logged in as')
@@ -42,7 +45,7 @@ async def on_message(msg):
 		if guildID == None:
 			await msg.channel.send('Bot not setup. Contact server administrators.')
 		else:
-			await process_report(msg)
+			await process_mail(msg)
 	else:
 		await bot.process_commands(msg)
 
@@ -65,8 +68,22 @@ async def on_raw_reaction_add(payload):
 async def on_raw_reaction_remove(payload):
 	pass
 
-async def process_report(msg):
-	pass
+async def process_mail(msg):
+	mail = {}
+	mail['sender'] = msg.author.id
+	mail['mailContent'] = msg.content
+	mail['status'] = 0
+	mail['staff_member'] = None
+	with io.open('utils/' + str(msg.id) + '.txt', 'w', encoding='utf-8') as f:
+		f.write(json.dumps(mail, sort_keys=True, indent=4, ensure_ascii=False))
+	em = discord.Embed(title="**__ModMail Recieved__**")
+	em.add_field(name="**Sender**", value=msg.author.mention)
+	em.add_field(name="**Message**", value=msg.content)
+	em.add_field(name="**Status**", value="Open")
+	em.add_field(name="**Staff Member**", value="None")
+	botMsg = await inboxChnl.send(embed=em)
+	await botMsg.add_reaction('\N{LEFT-POINTING MAGNIFYING GLASS}')
+	await botMsg.add_reaction('\N{WHITE HEAVY CHECK MARK}')
 
 async def _delete_msg(msg):
 	await msg.delete()
@@ -114,6 +131,6 @@ async def setup(ctx, roleTag):
 			modRoleID = role.id
 		config.setConfig(guildID, inboxID, modRoleID)
 		await bot.change_presence(activity=discord.Game(name='DM to contact staff'), status=discord.Status.online)
-		await ctx.channel.send('This channel now set as inbox. ' + modRole.name + " set as moderator role.")
+		await _wait_delete(await ctx.channel.send('This channel now set as inbox. ' + modRole.name + " set as moderator role."), 10)
 
 bot.run(token)
