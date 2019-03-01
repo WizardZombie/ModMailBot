@@ -92,28 +92,25 @@ async def on_raw_reaction_add(payload):
 @bot.event
 async def on_raw_reaction_remove(payload):
 	user = await bot.get_user_info(payload.user_id)
-	if user.bot:
-		return
-	else:
-		for item in activeMails:
-			if payload.message_id == item.botMsgID:
-				mail = get_mail(item.mailID)
-				if mail['status'] == 1:
-					if payload.emoji.name == '\u2705':
-						msg = await inboxChnl.get_message(payload.message_id)
-						await msg.add_reaction(payload.emoji.name)
-						return
-					else:
-						pass
+	for item in activeMails:
+		if payload.message_id == item.botMsgID:
+			mail = get_mail(item.mailID)
+			if mail['status'] == 1:
+				if payload.emoji.name == '\u2705':
+					msg = await inboxChnl.get_message(payload.message_id)
+					await msg.add_reaction(payload.emoji.name)
+					return
 				else:
-					if payload.emoji.name == '\U0001F50D' or payload.emoji.name == '\u2705':
-						msg = await inboxChnl.get_message(payload.message_id)
-						await msg.add_reaction(payload.emoji.name)
-						return
-					else:
-						pass
+					pass
 			else:
-				pass
+				if payload.emoji.name == '\U0001F50D' or payload.emoji.name == '\u2705':
+					msg = await inboxChnl.get_message(payload.message_id)
+					await msg.add_reaction(payload.emoji.name)
+					return
+				else:
+					pass
+		else:
+			pass
 
 async def process_mail(msg):
 	recievedAt = datetime.utcnow()
@@ -134,10 +131,10 @@ async def process_mail(msg):
 	with io.open('mails/' + str(msg.id) + '.txt', 'w', encoding='utf-8') as f:
 		f.write(json.dumps(mail, sort_keys=True, indent=4, ensure_ascii=False))
 	em = discord.Embed(title="**__ModMail Recieved__**", colour=0xe74c3c)
-	em.add_field(name="**Sender**", value=msg.author.mention)
-	em.add_field(name="**Message**", value=msg.content)
-	em.add_field(name="**Status**", value="Open")
-	em.add_field(name="**Staff Member**", value="None")
+	em.add_field(name="**Sender**", value=msg.author.mention, inline=False)
+	em.add_field(name="**Message**", value=msg.content, inline=False)
+	em.add_field(name="**Status**", value="Open", inline=True)
+	em.add_field(name="**Staff Member**", value="None", inline=True)
 	em.timestamp = recievedAt
 	em.set_footer(text='ID: ' + str(msg.id))
 	botMsg = await inboxChnl.send(embed=em)
@@ -164,13 +161,13 @@ async def assign_mail(msg, mailID, user):
 	senderID = mail['senderID']
 	sender = await bot.get_user_info(senderID)
 	em = discord.Embed(title="**__ModMail Recieved__**", colour=0xff9d00)
-	em.add_field(name="**Sender**", value=sender.mention)
-	em.add_field(name="**Message**", value=mail['mailContent'])
-	em.add_field(name="**Status**", value="Assigned")
-	em.add_field(name="**Staff Member**", value=user.mention)
+	em.add_field(name="**Sender**", value=sender.mention, inline=False)
+	em.add_field(name="**Message**", value=mail['mailContent'], inline=False)
+	em.add_field(name="**Status**", value="Assigned", inline=True)
+	em.add_field(name="**Staff Member**", value=user.mention, inline=True)
 	recievedAt = mail['recievedAt']
 	em.timestamp = datetime(recievedAt['year'], recievedAt['month'], recievedAt['day'], recievedAt['hour'], recievedAt['minute'], recievedAt['second'])
-	em.set_footer(text='ID: ' + str(msg.id))
+	em.set_footer(text='ID: ' + str(mail['id']))
 	mail['status'] = 1
 	mail['staff_member'] = user.id
 	save_mail(mail)
@@ -190,15 +187,17 @@ async def close_mail(msg, mailID, user):
 				except discord.NotFound:
 					pass
 			return
+	else:
+		pass
 	sender = await bot.get_user_info(mail['senderID'])
 	em = discord.Embed(title="**__ModMail Recieved__**", colour=0x2ecc71)
-	em.add_field(name="**Sender**", value=sender.mention)
-	em.add_field(name="**Message**", value=mail['mailContent'])
-	em.add_field(name="**Status**", value="Resolved")
-	em.add_field(name="**Staff Member**", value=user.mention)
+	em.add_field(name="**Sender**", value=sender.mention, inline=False)
+	em.add_field(name="**Message**", value=mail['mailContent'], inline=False)
+	em.add_field(name="**Status**", value="Resolved", inline=True)
+	em.add_field(name="**Staff Member**", value=user.mention, inline=True)
 	recievedAt = mail['recievedAt']
 	em.timestamp = datetime(recievedAt['year'], recievedAt['month'], recievedAt['day'], recievedAt['hour'], recievedAt['minute'], recievedAt['second'])
-	em.set_footer(text='ID: ' + str(msg.id))
+	em.set_footer(text='ID: ' + str(mail['id']))
 	mail['status'] = 2
 	mail['staff_member'] = user.id
 	save_mail(mail)
@@ -269,25 +268,27 @@ async def setup(ctx, roleTag):
 @bot.command()
 @checks.isMod()
 async def retrieve(ctx, mailID):
+	await _delete_msg(ctx.message)
 	mail = get_mail(mailID)
 	sender = await bot.get_user_info(mail['senderID'])
 	staff = await bot.get_user_info(mail['staff_member'])
-	em = discord.Embed(title="**__ModMail " + str(mail['id']) + "**", colour=0x000000)
-	em.add_field(name="**Sender**", value=sender.mention)
-	em.add_field(name="**Message**", value=mail['mailContent'])
+	em = discord.Embed(title="**__ModMail " + str(mail['id']) + "__**", colour=0x000000)
+	em.add_field(name="**Sender**", value=sender.mention, inline=False)
+	em.add_field(name="**Message**", value=mail['mailContent'], inline=False)
 	if mail['status'] == 2:
 		em.colour = 0x2ecc71
-		em.add_field(name="**Status**", value="Resolved")
+		em.add_field(name="**Status**", value="Resolved", inline=True)
 	elif mail['status'] == 2:
 		em.colour = 0xff9d00
-		em.add_field(name="**Status**", value="Assigned")
+		em.add_field(name="**Status**", value="Assigned", inline=True)
 	else:
 		em.colour = 0xe74c3c
-		em.add_field(name="**Status**", value="Open")
-	em.add_field(name="**Staff Member**", value=staff.mention)
+		em.add_field(name="**Status**", value="Open", inline=True)
+	em.add_field(name="**Staff Member**", value=staff.mention, inline=True)
 	recievedAt = mail['recievedAt']
 	em.timestamp = datetime(recievedAt['year'], recievedAt['month'], recievedAt['day'], recievedAt['hour'], recievedAt['minute'], recievedAt['second'])
 	em.set_footer(text='ID: ' + str(mail['id']))
+	await _wait_delete(await ctx.channel.send(embed=em), 30)
 
 class Object(object):
 	pass
