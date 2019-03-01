@@ -66,8 +66,10 @@ async def on_command_error(ctx, err):
 
 @bot.event
 async def on_raw_reaction_add(payload):
-	user = await bot.get_user_info(payload.user_id)
-	if payload.channel_id == inboxID:
+	user = guildObj.get_member(payload.user_id)
+	if user.bot:
+		return
+	elif payload.channel_id == inboxID:
 		for item in activeMails:
 			if payload.message_id == item.botMsgID:
 				msg = await inboxChnl.get_message(payload.message_id)
@@ -89,7 +91,29 @@ async def on_raw_reaction_add(payload):
 
 @bot.event
 async def on_raw_reaction_remove(payload):
-	pass
+	user = await bot.get_user_info(payload.user_id)
+	if user.bot:
+		return
+	else:
+		for item in activeMails:
+			if payload.message_id == item.botMsgID:
+				mail = get_mail(item.mailID)
+				if mail['status'] == 1:
+					if payload.emoji.name == '\u2705':
+						msg = await inboxChnl.get_message(payload.message_id)
+						await msg.add_reaction(payload.emoji.name)
+						return
+					else:
+						pass
+				else:
+					if payload.emoji.name == '\U0001F50D' or payload.emoji.name == '\u2705':
+						msg = await inboxChnl.get_message(payload.message_id)
+						await msg.add_reaction(payload.emoji.name)
+						return
+					else:
+						pass
+			else:
+				pass
 
 async def process_mail(msg):
 	recievedAt = datetime.utcnow()
@@ -128,6 +152,15 @@ async def process_mail(msg):
 
 async def assign_mail(msg, mailID, user):
 	mail = get_mail(mailID)
+	if mail['status'] == 1:
+		for reaction in msg.reactions:
+			try:
+				await reaction.remove(user)
+			except discord.NotFound:
+				pass
+		return
+	else:
+		pass
 	senderID = mail['senderID']
 	sender = await bot.get_user_info(senderID)
 	em = discord.Embed(title="**__ModMail Recieved__**", colour=0xff9d00)
@@ -147,6 +180,16 @@ async def assign_mail(msg, mailID, user):
 
 async def close_mail(msg, mailID, user):
 	mail = get_mail(mailID)
+	if mail['status'] == 1:
+		if user.id == mail['staff_member'] or user.permissions_in(inboxChnl).administrator:
+			pass
+		else:
+			for reaction in msg.reactions:
+				try:
+					await reaction.remove(user)
+				except discord.NotFound:
+					pass
+			return
 	sender = await bot.get_user_info(mail['senderID'])
 	em = discord.Embed(title="**__ModMail Recieved__**", colour=0x2ecc71)
 	em.add_field(name="**Sender**", value=sender.mention)
@@ -222,6 +265,29 @@ async def setup(ctx, roleTag):
 		config.setConfig(guildID, inboxID, modRoleID)
 		await bot.change_presence(activity=discord.Game(name='DM to contact staff'), status=discord.Status.online)
 		await _wait_delete(await ctx.channel.send('This channel now set as inbox. ' + modRole.name + " set as moderator role."), 10)
+
+@bot.command()
+@checks.isMod()
+async def retrieve(ctx, mailID):
+	mail = get_mail(mailID)
+	sender = await bot.get_user_info(mail['senderID'])
+	staff = await bot.get_user_info(mail['staff_member'])
+	em = discord.Embed(title="**__ModMail " + str(mail['id']) + "**", colour=0x000000)
+	em.add_field(name="**Sender**", value=sender.mention)
+	em.add_field(name="**Message**", value=mail['mailContent'])
+	if mail['status'] == 2:
+		em.colour = 0x2ecc71
+		em.add_field(name="**Status**", value="Resolved")
+	elif mail['status'] == 2:
+		em.colour = 0xff9d00
+		em.add_field(name="**Status**", value="Assigned")
+	else:
+		em.colour = 0xe74c3c
+		em.add_field(name="**Status**", value="Open")
+	em.add_field(name="**Staff Member**", value=staff.mention)
+	recievedAt = mail['recievedAt']
+	em.timestamp = datetime(recievedAt['year'], recievedAt['month'], recievedAt['day'], recievedAt['hour'], recievedAt['minute'], recievedAt['second'])
+	em.set_footer(text='ID: ' + str(mail['id']))
 
 class Object(object):
 	pass

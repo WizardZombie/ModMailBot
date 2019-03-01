@@ -11,7 +11,7 @@ def _is_mod_or_admin(ctx):
 		return _is_admin_check(ctx)
 
 def _is_admin_check(ctx):
-	return ctx.message.author.guild_permissions.administrator
+	return ctx.message.author.permissions_in(ctx.channel.id).administrator
 
 def isMod():
 	return commands.check(_is_mod_or_admin)
