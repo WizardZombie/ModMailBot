@@ -54,7 +54,8 @@ async def on_message(msg):
 @bot.event
 async def on_command_error(ctx, err):
 	if isinstance(err, commands.CheckFailure):
-		pass
+		await _delete_msg(ctx.message)
+		await _wait_delete(await ctx.channel.send('Unauthorised.'))
 	elif isinstance(err, commands.MissingRequiredArgument):
 		await _delete_msg(ctx.message)
 		param = err.param
@@ -254,9 +255,11 @@ async def setup(ctx, roleTag):
 		await ctx.channel.send('Please only mention 1 role!')
 		return
 	else:
-		global guildID, inboxID, modRoleID
+		global guildID, inboxID, modRoleID, guildObj, inboxChnl
 		guildID = ctx.guild.id
 		inboxID = ctx.channel.id
+		guildObj = bot.get_guild(guildID)
+		inboxChnl = guildObj.get_channel(inboxID)
 		modRole = None
 		for role in roleList:
 			modRole = role

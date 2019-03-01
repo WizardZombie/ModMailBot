@@ -9,6 +9,7 @@ modRoleID = None
 def _setup():	
 	global token, guildID, inboxID, modRoleID
 	data = {}
+	userInput = ""
 	print('Config file not found! Creating ...')
 	while userInput == "":
 		userInput = input('Please enter bot token: \n')
@@ -16,7 +17,6 @@ def _setup():
 	data['guildID'] = None
 	data['inboxID'] = None
 	data['modRoleID'] = None
-	_save_data()
 	return data
 
 def _save_data():
@@ -31,9 +31,11 @@ def _save_data():
 
 def _load_data():
 	try:
+		('Opening File ...')
 		with open('utils/config.txt') as data_file:
 			data = json.load(data_file)
 	except FileNotFoundError:
+		print('File Not Found! Setting up ...')
 		data = _setup()
 	return data
 
@@ -42,6 +44,7 @@ token = data['token']
 guildID = data['guildID']
 inboxID = data['inboxID']
 modRoleID = data['modRoleID']
+_save_data()
 
 def getToken():
 	return token
