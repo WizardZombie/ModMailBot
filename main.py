@@ -66,11 +66,11 @@ async def on_command_error(ctx, err):
 
 @bot.event
 async def on_raw_reaction_add(payload):
-	user = bot.get_user_info(payload.user_id)
+	user = await bot.get_user_info(payload.user_id)
 	if payload.channel_id == inboxID:
 		for item in activeMails:
 			if payload.message_id == item.botMsgID:
-				msg = inboxChnl.get_message(payload.message_id)
+				msg = await inboxChnl.get_message(payload.message_id)
 				if payload.emoji.name == '\U0001F50D':
 					await assign_mail(msg, item.mailID, user)
 				elif payload.emoji.name == '\u2705':
@@ -80,7 +80,7 @@ async def on_raw_reaction_add(payload):
 						if payload.emoji.name == '\U0001F50D' or payload.emoji.name == '\u2705':
 							pass
 						else:
-							reaction.remove(user)
+							await reaction.remove(user)
 				return
 			else:
 				pass
@@ -141,9 +141,9 @@ async def assign_mail(msg, mailID, user):
 	mail['status'] = 1
 	mail['staff_member'] = user.id
 	save_mail(mail)
-	msg.edit(embed=em)
-	msg.clear_reactions()
-	msg.add_reaction('\N{WHITE HEAVY CHECK MARK}')
+	await msg.edit(embed=em)
+	await msg.clear_reactions()
+	await msg.add_reaction('\N{WHITE HEAVY CHECK MARK}')
 
 async def close_mail(msg, mailID, user):
 	mail = get_mail(mailID)
@@ -159,10 +159,10 @@ async def close_mail(msg, mailID, user):
 	mail['status'] = 2
 	mail['staff_member'] = user.id
 	save_mail(mail)
-	msg.edit(embed=em)
-	msg.clear_reactions()
+	await msg.edit(embed=em)
+	await msg.clear_reactions()
 
-async def get_mail(mailID):
+def get_mail(mailID):
 	try:
 		with open('mails/' + str(mailID) + '.txt') as data_file:
 			data = json.load(data_file)
