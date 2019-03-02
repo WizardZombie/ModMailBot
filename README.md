@@ -16,3 +16,5 @@ Initial setup will require the token for the bot user you wish to use on your se
 ### Commands
 * \>setup <@ModRoleTag> - Use to set the inbox channel and the moderator role of the server
 * \>retrieve \<mailID> - Use to view information on a ModMail
+
+>Requires Python 3.6+, Discord.py 1.0.0a (Rewrite Branch)
