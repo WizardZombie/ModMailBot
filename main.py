@@ -132,7 +132,7 @@ async def process_mail(msg):
 	with io.open('mails/' + str(msg.id) + '.txt', 'w', encoding='utf-8') as f:
 		f.write(json.dumps(mail, sort_keys=True, indent=4, ensure_ascii=False))
 	em = discord.Embed(title="**__ModMail Recieved__**", colour=0xe74c3c)
-	em.add_field(name="**Sender**", value=msg.author.mention, inline=False)
+	em.add_field(name="**Sender**", value=msg.author.mention + ' (' + str(msg.author.id) + ')', inline=False)
 	em.add_field(name="**Message**", value=msg.content, inline=False)
 	em.add_field(name="**Status**", value="Open", inline=True)
 	em.add_field(name="**Staff Member**", value="None", inline=True)
@@ -162,7 +162,7 @@ async def assign_mail(msg, mailID, user):
 	senderID = mail['senderID']
 	sender = await bot.get_user_info(senderID)
 	em = discord.Embed(title="**__ModMail Recieved__**", colour=0xff9d00)
-	em.add_field(name="**Sender**", value=sender.mention, inline=False)
+	em.add_field(name="**Sender**", value=sender.mention + ' (' + str(sender.id) + ')', inline=False)
 	em.add_field(name="**Message**", value=mail['mailContent'], inline=False)
 	em.add_field(name="**Status**", value="Assigned", inline=True)
 	em.add_field(name="**Staff Member**", value=user.mention, inline=True)
@@ -192,7 +192,7 @@ async def close_mail(msg, mailID, user):
 		pass
 	sender = await bot.get_user_info(mail['senderID'])
 	em = discord.Embed(title="**__ModMail Recieved__**", colour=0x2ecc71)
-	em.add_field(name="**Sender**", value=sender.mention, inline=False)
+	em.add_field(name="**Sender**", value=sender.mention + ' (' + str(sender.id) + ')', inline=False)
 	em.add_field(name="**Message**", value=mail['mailContent'], inline=False)
 	em.add_field(name="**Status**", value="Resolved", inline=True)
 	em.add_field(name="**Staff Member**", value=user.mention, inline=True)
@@ -276,7 +276,7 @@ async def retrieve(ctx, mailID):
 	sender = await bot.get_user_info(mail['senderID'])
 	staff = await bot.get_user_info(mail['staff_member'])
 	em = discord.Embed(title="**__ModMail " + str(mail['id']) + "__**", colour=0x000000)
-	em.add_field(name="**Sender**", value=sender.mention, inline=False)
+	em.add_field(name="**Sender**", value=sender.mention + ' (' + str(sender.id) + ')', inline=False)
 	em.add_field(name="**Message**", value=mail['mailContent'], inline=False)
 	if mail['status'] == 2:
 		em.colour = 0x2ecc71
